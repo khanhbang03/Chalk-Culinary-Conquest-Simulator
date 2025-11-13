@@ -116,10 +116,9 @@ When the light fades, only three figures stand on a glowing plateau of glassy ch
 The blizzard clears, revealing the aurora dancing overhead.
 
 Uwi Tenpen:
-
-“My dish was perfection.”
+“My dish was perfection.”<br>
 Aryan:
-“My flavor, unstoppable.”
+“My flavor, unstoppable.”<br>
 Yuta Takaya (smiles):
 “But the real secret ingredient… is chaos.”
 
@@ -132,5 +131,5 @@ Narrator:
 
 [Fade to black]
 
-CHALK WARFARE: CULINARY CONQUEST
+CHALK WARFARE: CULINARY CONQUEST<br>
 ‘The Kitchen Is the Battlefield.’
