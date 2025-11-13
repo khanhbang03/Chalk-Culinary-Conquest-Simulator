@@ -22,7 +22,7 @@ Performance-minded agent simulation (sampling-based engagements).
 
 Here’s the cinematic setup for the story — a prelude to a simulator version (if you later want me to build it as HTML/JS like the others):
 
-🎬 CHALK WARFARE: CULINARY CONQUEST – THE BATTLE OF ICELAND
+🎬 CHALK WARFARE: CULINARY CONQUEST – THE BATTLE OF ICELAND<br>
 ❄️ Scene 1 – “The Frosted Arena”
 <img width="1180" height="851" alt="image" src="https://github.com/user-attachments/assets/153a5acc-6e15-4c25-99de-e2864bc4d0a2" />
 
@@ -136,6 +136,6 @@ Narrator:
 [Fade to black]
 
 CHALK WARFARE: CULINARY CONQUEST<br>
-‘The Kitchen Is the Battlefield.’
+‘The Kitchen Is the Battlefield.’<br>
 <img width="750" height="410" alt="image" src="https://github.com/user-attachments/assets/cf01bfae-7a0d-483f-8987-de9a0ba83bb8" />
 
