@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Chalk Warfare — Culinary Conquest (3-way Simulator)</title>
+<style>
+  :root{--bg:#021219;--panel:#0b2330;--red:#ff8a8a;--green:#9fe88f;--white:#fff6e6;--muted:#93a3ad}
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
+  body{background:linear-gradient(180deg,var(--bg),#041622);color:#e7f3f6}
+  #wrap{display:flex;gap:12px;padding:12px;height:100vh;box-sizing:border-box}
+  #left{width:360px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);border-radius:12px;padding:14px}
+  #center{flex:1;display:flex;flex-direction:column}
+  canvas{background:#06121a;border-radius:10px;display:block}
+  h1{font-size:18px;margin:6px 0}
+  .panel{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;margin-bottom:10px}
+  button{background:#102a36;color:#e7f3f6;border:0;padding:8px 10px;border-radius:8px;cursor:pointer}
+  .muted{color:var(--muted);font-size:13px}
+  .statRow{display:flex;justify-content:space-between;align-items:center;padding:6px 0}
+  .abilityRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .abilityRow button{padding:8px}
+  input[type=range]{width:100%}
+  .footer{font-size:12px;color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="left">
+    <h1>Chalk Warfare — Culinary Conquest</h1>
+    <div class="panel">
+      <div class="statRow"><div class="muted">Match</div><div class="muted">1000 Uwi Tenpen vs 1000 Aryan vs 1000 Yuta</div></div>
+      <div class="statRow"><div class="muted">Time</div><div id="time">00:00</div></div>
+      <div class="statRow"><div class="muted">Uwi Alive</div><div id="uAlive">1000</div></div>
+      <div class="statRow"><div class="muted">Aryan Alive</div><div id="aAlive">1000</div></div>
+      <div class="statRow"><div class="muted">Yuta Alive</div><div id="yAlive">1000</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="muted">Controls</div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button id="startBtn">Start</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="resetBtn">Reset</button>
+      </div>
+      <div style="margin-top:8px">
+        <div class="muted">Speed</div>
+        <input id="speed" type="range" min="0.25" max="4" step="0.25" value="1">
+        <div id="speedVal" class="muted">1x</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="muted">Commander Abilities (one-use heavy + cooldown)</div>
+      <div style="margin-top:8px">
+        <div class="muted">Uwi Tenpen — Gourmet Grid</div>
+        <div class="abilityRow">
+          <button id="uwiSoup">Soup of the Gods</button>
+          <button id="uwiSouffle">Molten Soufflé Barrage</button>
+          <button id="uwiResurrect">Kitchen Reinforce</button>
+        </div>
+
+        <div style="margin-top:10px" class="muted">Aryan — Spice & Cryo</div>
+        <div class="abilityRow">
+          <button id="aryanSpice">Spice Storm</button>
+          <button id="aryanFreeze">Freezer Burn Formation</button>
+          <button id="aryanOverdrive">Spice Overdrive</button>
+        </div>
+
+        <div style="margin-top:10px" class="muted">Yuta Takaya — Fusion Chef</div>
+        <div class="abilityRow">
+          <button id="yutaWok">Wok Boomerang (Dragon)</button>
+          <button id="yutaFusion">Triple Fusion Mode</button>
+          <button id="yutaGeyser">Geyser Leap</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <label class="muted"><input type="checkbox" id="showParticles" checked> Show particles</label><br>
+      <label class="muted"><input type="checkbox" id="showNames"> Show commander names</label>
+      <div class="footer">Open this file in a modern browser. Performance: agents are light-weight and drawn as dots for speed.</div>
+    </div>
+  </div>
+
+  <div id="center">
+    <canvas id="c" width="1200" height="720"></canvas>
+    <div style="margin-top:8px;color:var(--muted);font-size:13px">Three-way auto-battle. Use abilities to steer the flow. This is deterministic but chaotic — try different sequences.</div>
+  </div>
+</div>
+
+<script>
+// Chalk Warfare — Culinary Conquest (3-way auto-battle simulator)
+// Single-file prototype. Designed for performance with 3000 agents simulated as lightweight objects.
+
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+// UI
+const startBtn = document.getElementById('startBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+const resetBtn = document.getElementById('resetBtn');
+const speedRange = document.getElementById('speed');
+const speedVal = document.getElementById('speedVal');
+const uAliveEl = document.getElementById('uAlive');
+const aAliveEl = document.getElementById('aAlive');
+const yAliveEl = document.getElementById('yAlive');
+const timeEl = document.getElementById('time');
+const showParticles = document.getElementById('showParticles');
+
+const buttons = {
+  uwiSoup: document.getElementById('uwiSoup'), uwiSouffle: document.getElementById('uwiSouffle'), uwiResurrect: document.getElementById('uwiResurrect'),
+  aryanSpice: document.getElementById('aryanSpice'), aryanFreeze: document.getElementById('aryanFreeze'), aryanOverdrive: document.getElementById('aryanOverdrive'),
+  yutaWok: document.getElementById('yutaWok'), yutaFusion: document.getElementById('yutaFusion'), yutaGeyser: document.getElementById('yutaGeyser')
+};
+
+let simSpeed = 1; let running = false; let simTime = 0;
+const COUNT = 1000; // per team
+let units = [];
+let particles = [];
+let projectiles = [];
+let stats = {uKills:0,aKills:0,yKills:0};
+
+// ability cooldowns and active timers
+const cooldowns = { uwiSoup:0, uwiSouffle:0, uwiRes:0, aryanSpice:0, aryanFreeze:0, aryanOverdrive:0, yutaWok:0, yutaFusion:0, yutaGeyser:0 };
+const actives = { uwiSoup:0, uwiSouffle:0, uwiRes:0, aryanSpice:0, aryanFreeze:0, aryanOverdrive:0, yutaWok:0, yutaFusion:0, yutaGeyser:0 };
+
+function rand(min,max){return Math.random()*(max-min)+min}
+
+function resetSim(){
+  units = []; particles = []; projectiles = []; stats = {uKills:0,aKills:0,yKills:0}; simTime=0;
+  // Uwi Tenpen (white chefs) spawn left
+  for(let i=0;i<COUNT;i++) units.push({id:units.length,team:'uwi',x:50+rand(0,220),y:50+rand(40,H-90),alive:true});
+  // Aryan spawn center-high (thermal ridge)
+  for(let i=0;i<COUNT;i++) units.push({id:units.length,team:'aryan',x:W/2-120+rand(-60,60),y:50+rand(40,H-90),alive:true});
+  // Yuta spawn right
+  for(let i=0;i<COUNT;i++) units.push({id:units.length,team:'yuta',x:W-50-rand(0,220),y:50+rand(40,H-90),alive:true});
+  for(let k in cooldowns) cooldowns[k]=0; for(let k in actives) actives[k]=0;
+  updateHUD();
+}
+
+// abilities implementation
+function useUwiSoup(){ if(cooldowns.uwiSoup>0) return; cooldowns.uwiSoup=30; actives.uwiSoup=3; // area effect from left -> right
+  // spawn 'soup waves' moving right, heavy damage to anyone they touch
+  for(let i=0;i<60;i++){ projectiles.push({x:80,y:60+rand(0,H-120),vx:2.5+Math.random()*1.2,team:'uwi',ttl:2,damage:1}); }
+}
+function useUwiSouffle(){ if(cooldowns.uwiSouffle>0) return; cooldowns.uwiSouffle=18; actives.uwiSouffle=0.8; for(let i=0;i<150;i++){ projectiles.push({x:50+rand(0,260),y:rand(40,H-80),vx:rand(-0.6,0.6),vy:rand(-0.6,0.6),team:'uwi',ttl:1,damage:1}); } }
+function useUwiRes(){ if(cooldowns.uwiRes>0) return; cooldowns.uwiRes=40; actives.uwiRes=6; }
+
+function useAryanSpice(){ if(cooldowns.aryanSpice>0) return; cooldowns.aryanSpice=22; actives.aryanSpice=4; for(let i=0;i<200;i++){ projectiles.push({x:W/2+rand(-80,80),y:rand(40,H-80),vx:rand(-3,3),team:'aryan',ttl:1.6,damage:1}); } }
+function useAryanFreeze(){ if(cooldowns.aryanFreeze>0) return; cooldowns.aryanFreeze=26; actives.aryanFreeze=5; }
+function useAryanOverdrive(){ if(cooldowns.aryanOverdrive>0) return; cooldowns.aryanOverdrive=40; actives.aryanOverdrive=3; for(let i=0;i<300;i++){ projectiles.push({x:W/2+rand(-40,40),y:rand(40,H-80),vx:4+Math.random()*2,team:'aryan',ttl:1.2,damage:1}); } }
+
+function useYutaWok(){ if(cooldowns.yutaWok>0) return; cooldowns.yutaWok=18; actives.yutaWok=1.6; // spawn dragons (particles moving in arcs)
+  for(let i=0;i<6;i++){ particles.push({x:W-140,y:100+rand(0,200),vx:-1.6+Math.random()*-0.6,vy:rand(-0.4,0.4),ttl:2.4,col:'#7fffa0'}); }
+}
+function useYutaFusion(){ if(cooldowns.yutaFusion>0) return; cooldowns.yutaFusion=36; actives.yutaFusion=4; }
+function useYutaGeyser(){ if(cooldowns.yutaGeyser>0) return; cooldowns.yutaGeyser=20; actives.yutaGeyser=2; // spawn vertical geysers in center-right
+  for(let i=0;i<40;i++){ projectiles.push({x:W-220+rand(-40,40),y:H-60,vy:-5-rand(0,2),team:'yuta',ttl:1.6,damage:1,vertical:true}); }
+}
+
+// wire buttons
+buttons.uwiSoup.onclick = useUwiSoup; buttons.uwiSouffle.onclick = useUwiSouffle; buttons.uwiResurrect.onclick = useUwiRes;
+buttons.aryanSpice.onclick = useAryanSpice; buttons.aryanFreeze.onclick = useAryanFreeze; buttons.aryanOverdrive.onclick = useAryanOverdrive;
+buttons.yutaWok.onclick = useYutaWok; buttons.yutaFusion.onclick = useYutaFusion; buttons.yutaGeyser.onclick = useYutaGeyser;
+
+startBtn.onclick = ()=>{ running=true; };
+pauseBtn.onclick = ()=>{ running=false; };
+resetBtn.onclick = ()=>{ running=false; resetSim(); };
+speedRange.oninput = ()=>{ simSpeed = parseFloat(speedRange.value); speedVal.textContent = simSpeed+'x'; };
+
+// simulation loop
+let last = performance.now();
+function step(now){ const dt = Math.min(60, now-last)/1000; last = now; if(running) simTime += dt*simSpeed; const simDt = dt*simSpeed;
+  // cooldowns
+  for(let k in cooldowns) cooldowns[k] = Math.max(0, cooldowns[k]-simDt);
+  for(let k in actives) actives[k] = Math.max(0, actives[k]-simDt);
+
+  if(running){
+    // engagement sampling to avoid N^2
+    const reds = units.filter(u=>u.alive && u.team==='uwi');
+    const arys = units.filter(u=>u.alive && u.team==='aryan');
+    const yutas = units.filter(u=>u.alive && u.team==='yuta');
+
+    // resurrect mechanic for Uwi
+    if(actives.uwiRes>0){ for(let i=0;i<2;i++){ const dead = units.find(u=>!u.alive && u.team==='uwi'); if(dead){ dead.alive=true; dead.x=50+rand(0,220); dead.y=50+rand(40,H-90); } } }
+    // freeze effect reduces hit chance on frozen teams
+    const freezeActive = actives.aryanFreeze>0;
+    const shadowActive = actives.yutaFusion>0; // treat fusion as 'enhanced evasion' for others
+
+    const SAMPLES = 1200; // intensity
+    for(let s=0;s<SAMPLES;s++){
+      const idx = Math.floor(Math.random()*units.length); const a = units[idx]; if(!a || !a.alive) continue;
+      // choose target team randomly among the other two
+      let targets = units.filter(u=>u.alive && u.team!==a.team);
+      if(targets.length===0) break;
+      const t = targets[Math.floor(Math.random()*targets.length)];
+      // base hit chance
+      let base = 0.12;
+      if(a.team==='uwi') base += 0.02; if(a.team==='aryan') base += 0.03; if(a.team==='yuta') base += 0.01;
+      // abilities modify
+      if(actives.uwiSoup>0 && a.team==='uwi') base += 0.18;
+      if(actives.aryanSpice>0 && a.team==='aryan') base += 0.12;
+      if(actives.yutaFusion>0 && a.team==='yuta') base += 0.18;
+      // target defenses
+      if(freezeActive && t.team!=='aryan') base *= 0.7; // freezing helps aryans by making others stick
+      if(shadowActive && t.team!=='yuta') base *= 0.85; // fusion gives yuta evasion aura
+
+      if(Math.random() < base){ t.alive = false; if(a.team==='uwi') stats.uKills++; if(a.team==='aryan') stats.aKills++; if(a.team==='yuta') stats.yKills++; particles.push({x:t.x,y:t.y,ttl:0.7,col: a.team==='uwi' ? '#fff6b3' : a.team==='aryan' ? '#ffb3b3' : '#b7ffd0'}); }
+    }
+
+    // projectiles movement + area effects
+    for(let i=projectiles.length-1;i>=0;i--){ const p = projectiles[i]; if(p.vertical){ p.y += p.vy*simDt*60; p.ttl -= simDt; if(p.y<40 || p.ttl<=0) projectiles.splice(i,1); else{ // damage units near
+          for(let u of units){ if(u.alive && Math.abs(u.x-p.x)<18 && Math.abs(u.y-p.y)<18){ u.alive=false; if(p.team==='uwi') stats.uKills++; if(p.team==='aryan') stats.aKills++; if(p.team==='yuta') stats.yKills++; particles.push({x:u.x,y:u.y,ttl:0.6,col:'#ffd9a6'}); } }
+        } }
+      else{ p.x += (p.vx||0)*simDt*60; p.y += (p.vy||0)*simDt*60; p.ttl -= simDt; if(p.ttl<=0) projectiles.splice(i,1); else{ for(let u of units){ if(u.alive && Math.hypot(u.x-p.x,u.y-p.y)<14){ u.alive=false; if(p.team==='uwi') stats.uKills++; if(p.team==='aryan') stats.aKills++; if(p.team==='yuta') stats.yKills++; particles.push({x:u.x,y:u.y,ttl:0.6,col:'#ffd9a6'}); } } } } }
+
+    // particles cleanup
+    for(let i=particles.length-1;i>=0;i--){ particles[i].ttl -= simDt; if(particles[i].ttl<=0) particles.splice(i,1); }
+
+    // small visual drift for alive units
+    for(let u of units){ if(u.alive){ u.x += rand(-8,8)*simDt; u.y += rand(-8,8)*simDt; u.x = Math.max(40, Math.min(W-40, u.x)); u.y = Math.max(40, Math.min(H-40, u.y)); } }
+  }
+
+  updateHUD(); render(); requestAnimationFrame(step);
+}
+
+function updateHUD(){ uAliveEl.textContent = units.filter(u=>u.alive && u.team==='uwi').length; aAliveEl.textContent = units.filter(u=>u.alive && u.team==='aryan').length; yAliveEl.textContent = units.filter(u=>u.alive && u.team==='yuta').length; const mm = Math.floor(simTime/60).toString().padStart(2,'0'); const ss = Math.floor(simTime%60).toString().padStart(2,'0'); timeEl.textContent = mm+':'+ss; }
+
+function render(){ ctx.clearRect(0,0,W,H);
+  // icy volcanic background
+  const g = ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#01202a'); g.addColorStop(1,'#041722'); ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  // distant volcano
+  ctx.fillStyle = '#1a0f0f'; ctx.beginPath(); ctx.moveTo(W/2-120,H-120); ctx.lineTo(W/2,H-380); ctx.lineTo(W/2+120,H-120); ctx.fill();
+  // lava glow
+  ctx.fillStyle = 'rgba(255,110,60,0.08)'; ctx.fillRect(W/2-140,H-140,280,80);
+  // aurora (simple)
+  ctx.fillStyle = 'rgba(80,255,160,0.06)'; ctx.fillRect(0,20,W,80);
+
+  // spawn zones
+  ctx.fillStyle='rgba(255,255,255,0.02)'; ctx.fillRect(0,40,260,H-80); ctx.fillStyle='rgba(255,160,160,0.02)'; ctx.fillRect(W/2-160,40,320,H-80); ctx.fillStyle='rgba(120,255,170,0.02)'; ctx.fillRect(W-260,40,260,H-80);
+
+  // draw units aggregated
+  const alive = units.filter(u=>u.alive);
+  if(alive.length>1200){ // draw as dots
+    for(let u of alive){ ctx.fillStyle = u.team==='uwi' ? '#fff6b3' : u.team==='aryan' ? '#ff9b9b' : '#9ff8c1'; ctx.fillRect(u.x-1,u.y-1,2,2); }
+  } else { for(let u of alive){ ctx.beginPath(); ctx.fillStyle = u.team==='uwi' ? '#fff6b3' : u.team==='aryan' ? '#ff9b9b' : '#9ff8c1'; ctx.arc(u.x,u.y,3,0,Math.PI*2); ctx.fill(); } }
+
+  // projectiles and particles
+  if(showParticles.checked){ for(let p of projectiles){ ctx.beginPath(); ctx.fillStyle = p.team==='uwi' ? 'rgba(255,230,120,0.9)' : p.team==='aryan' ? 'rgba(255,120,120,0.95)' : 'rgba(120,255,170,0.9)'; ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fill(); }
+    for(let pt of particles){ ctx.beginPath(); ctx.fillStyle = pt.col; ctx.globalAlpha = Math.max(0.1, Math.min(1, pt.ttl)); ctx.arc(pt.x,pt.y,8*(pt.ttl/0.7+0.1),0,Math.PI*2); ctx.fill(); ctx.globalAlpha =1; } }
+
+  // HUD overlay counts
+  ctx.fillStyle='rgba(0,0,0,0.4)'; ctx.fillRect(W/2-140,H-54,280,42);
+  ctx.fillStyle='#fff6b3'; ctx.font='16px sans-serif'; ctx.fillText(units.filter(u=>u.alive && u.team==='uwi').length, W/2-60, H-28);
+  ctx.fillStyle='#ff9b9b'; ctx.fillText(units.filter(u=>u.alive && u.team==='aryan').length, W/2-10, H-28);
+  ctx.fillStyle='#9ff8c1'; ctx.fillText(units.filter(u=>u.alive && u.team==='yuta').length, W/2+40, H-28);
+
+  if(document.getElementById('showNames').checked){ ctx.fillStyle='#fff'; ctx.font='14px sans-serif'; ctx.fillText('Uwi Tenpen',40,28); ctx.fillText('Aryan',W/2-30,28); ctx.fillText('Yuta Takaya',W-140,28); }
+}
+
+// init
+resetSim(); requestAnimationFrame(step);
+</script>
+</body>
+</html>
