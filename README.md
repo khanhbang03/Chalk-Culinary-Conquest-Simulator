@@ -18,15 +18,18 @@ Icelandic visual theme (aurora, volcano, geysers), particles, and HUD.
 Performance-minded agent simulation (sampling-based engagements).
 
 🔥 Alright — that’s an epic concept: “Chalk Warfare: Culinary Conquest” — a three-way, overpowered chalk battle between 1000 Uwi Tenpen, 1000 Aryan, and 1000 Yuta Takaya, all wielding cooking-based powers, set in the icy volcanic plains of Iceland.
+<img width="883" height="621" alt="image" src="https://github.com/user-attachments/assets/e9187069-3461-4739-9ff9-ec78c2c051e5" />
 
 Here’s the cinematic setup for the story — a prelude to a simulator version (if you later want me to build it as HTML/JS like the others):
 
 🎬 CHALK WARFARE: CULINARY CONQUEST – THE BATTLE OF ICELAND
 ❄️ Scene 1 – “The Frosted Arena”
+<img width="1180" height="851" alt="image" src="https://github.com/user-attachments/assets/153a5acc-6e15-4c25-99de-e2864bc4d0a2" />
 
 Setting:
 A vast frozen crater surrounded by geysers and black volcanic rock.
 Steam rises from fissures while blizzards swirl — but through the cold, the battlefield glows with lines of chalk shaped like chef runes.
+<img width="1200" height="674" alt="image" src="https://github.com/user-attachments/assets/d07ac8e7-1246-46da-acdc-b83cf005d4bf" />
 
 Narrator:
 
@@ -111,6 +114,7 @@ Three runes light up beneath his feet — Wasabi. Miso. Fury.
 His power surges — he punches the lava, and the entire volcano inverts into a chalk explosion that lights the sky green.
 
 🌌 Scene 5 – “Aftertaste”
+<img width="1000" height="666" alt="image" src="https://github.com/user-attachments/assets/936310bb-436d-4a77-ba1b-6c7cf97ffda1" />
 
 When the light fades, only three figures stand on a glowing plateau of glassy chalk.
 The blizzard clears, revealing the aurora dancing overhead.
@@ -133,3 +137,5 @@ Narrator:
 
 CHALK WARFARE: CULINARY CONQUEST<br>
 ‘The Kitchen Is the Battlefield.’
+<img width="750" height="410" alt="image" src="https://github.com/user-attachments/assets/cf01bfae-7a0d-483f-8987-de9a0ba83bb8" />
+
